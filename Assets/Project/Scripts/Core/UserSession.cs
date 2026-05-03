@@ -9,6 +9,7 @@ public class UserSession : MonoBehaviour
     public string AuthToken { get; private set; }
     public string ChildId { get; private set; }
     public string Nickname { get; private set; }
+    public string UserEmail { get; set; }
     public string Role { get; private set; }
     public bool IsLoggedIn => !string.IsNullOrEmpty(AuthToken);
 
@@ -82,7 +83,7 @@ public class UserSession : MonoBehaviour
             });
     }
 
-    // НОВОЕ: вход ребёнка по никнейму
+    // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     public void LoginChildByNickname(string nickname, string password, Action onSuccess, Action<string> onError)
     {
         StartCoroutine(LoginChildByNicknameCoroutine(nickname, password, onSuccess, onError));
@@ -131,7 +132,7 @@ public class UserSession : MonoBehaviour
             });
     }
 
-    // НОВОЕ: вход родителя по никнейму ребёнка
+    // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     public void LoginParentByNickname(string nickname, string pin, Action onSuccess, Action<string> onError)
     {
         StartCoroutine(LoginParentByNicknameCoroutine(nickname, pin, onSuccess, onError));
@@ -154,6 +155,31 @@ public class UserSession : MonoBehaviour
             error => onError?.Invoke(error));
     }
 
+    public void GetProfile(Action<string, string> onSuccess, Action<string> onError)
+{
+    StartCoroutine(GetProfileCoroutine(onSuccess, onError));
+}
+
+IEnumerator GetProfileCoroutine(Action<string, string> onSuccess, Action<string> onError)
+{
+    yield return ApiClient.Get("/api/profile", AuthToken,
+        success =>
+        {
+            ProfileResponse resp = JsonUtility.FromJson<ProfileResponse>(success);
+            UserEmail = resp.email;  // СЃРѕС…СЂР°РЅСЏРµРј email
+            Nickname = resp.nickname;
+            onSuccess?.Invoke(resp.email, resp.nickname);
+        },
+        error => onError?.Invoke(error));
+}
+
+[System.Serializable]
+public class ProfileResponse
+{
+    public string email;
+    public string nickname;
+}
+
     public void Logout()
     {
         AuthToken = null;
@@ -163,7 +189,7 @@ public class UserSession : MonoBehaviour
     }
 }
 
-// ---- Модели JSON ----
+// ---- пїЅпїЅпїЅпїЅпїЅпїЅ JSON ----
 [System.Serializable]
 public class ChildRegisterPayload
 {
