@@ -2,17 +2,12 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-
 public class TaskService : MonoBehaviour
-
-
 {
     public static TaskService Instance { get; private set; }
 
+    // Событие для мгновенного обновления всех счетчиков очков в игре
     public event Action<int> OnScoreChanged;
-    
-
-    
 
     void Awake()
     {
@@ -20,27 +15,59 @@ public class TaskService : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    // 1. Получение прогресса (очки, уровень)
+    // --- 1. ЛОГИКА МАГАЗИНА (НОВАЯ) ---
+
+    // Покупка товара по его ID из базы (POST /api/shop/buy)
+    public void BuyItem(int itemId, Action<int> onSuccess, Action<string> onError)
+    {
+        StartCoroutine(BuyItemCoroutine(itemId, onSuccess, onError));
+    }
+
+    IEnumerator BuyItemCoroutine(int itemId, Action<int> onSuccess, Action<string> onError)
+{
+    string json = "{\"item_id\":" + itemId + "}"; 
+    
+    yield return ApiClient.Post("/api/shop/buy", json, UserSession.Instance.AuthToken,
+        success => {
+            var resp = JsonUtility.FromJson<TaskCompleteResponse>(success);
+            OnScoreChanged?.Invoke(resp.score); // Если в JSON есть score, обновим всё
+            onSuccess?.Invoke(resp.score);
+        },
+        error => {
+            // Больше никаких LoadProgress внутри! Просто сообщаем об ошибке.
+            onError?.Invoke(error);
+        }
+    );
+}
+
+
+
+    // Получение списка товаров (GET /api/shop/items)
+    public void GetShopItems(Action<ShopItemsList> onSuccess, Action<string> onError)
+    {
+        StartCoroutine(ApiClient.Get("/api/shop/items", UserSession.Instance.AuthToken,
+            success => onSuccess?.Invoke(JsonUtility.FromJson<ShopItemsList>(success)),
+            onError));
+    }
+
+    // --- 2. ПРОГРЕСС И ЗАДАНИЯ (СТАРОЕ) ---
+
     public void LoadProgress(Action<int, int, int> onSuccess, Action<string> onError)
     {
         StartCoroutine(GetProgressCoroutine(onSuccess, onError));
     }
-    
 
     IEnumerator GetProgressCoroutine(Action<int, int, int> onSuccess, Action<string> onError)
     {
         yield return ApiClient.Get("/api/progress", UserSession.Instance.AuthToken,
             success => {
                 var pr = JsonUtility.FromJson<ProgressData>(success);
-
                 OnScoreChanged?.Invoke(pr.current_points);
-
                 onSuccess?.Invoke(pr.level, pr.current_points, pr.points_to_next);
             },
             onError);
     }
 
-    // 2. Ежедневная награда
     public void DailyCheckin(Action<int, int, int> onSuccess, Action<string> onError)
     {
         StartCoroutine(DailyCheckinCoroutine(onSuccess, onError));
@@ -56,51 +83,59 @@ public class TaskService : MonoBehaviour
             onError);
     }
 
-    // 3. Упрощенная отправка результата задания
-    // Мы оставляем сигнатуру метода прежней, чтобы TaskVerifier не сломался
+        // Этот метод нужен для GameNetworkManager, чтобы исправить ошибку CS1061
     public void CompleteTask(string taskId, string taskType, string parentPin, string answer, string solutionText,
                              Action<bool, int> onDone, Action<string> onError)
     {
-        StartCoroutine(CompleteTaskCoroutine(taskId, answer, onDone, onError));
+        // Создаем объект данных для отправки на сервер
+        var payload = new TaskCompletePayload
+        {
+            task_id = taskId,
+            task_type = taskType,
+            answer = answer,
+            parent_pin = parentPin
+        };
+
+        string json = JsonUtility.ToJson(payload);
+
+        StartCoroutine(ApiClient.Post("/api/task/complete", json, UserSession.Instance.AuthToken,
+            success => {
+                var resp = JsonUtility.FromJson<TaskCompleteResponse>(success);
+                OnScoreChanged?.Invoke(resp.score); // Обновляем очки в UI
+                onDone?.Invoke(true, resp.score);
+            },
+            onError
+        ));
     }
 
+
     public void AddPointsSimple(int amount, Action<int> onDone, Action<string> onError)
-{
-    // Мы передаем rewardPoints как "answer", чтобы сервер мог их обработать, 
-    // если он настроен на простой прием очков.
-    StartCoroutine(CompleteTaskCoroutine("1", amount.ToString(), (success, newScore) => {
-        onDone?.Invoke(newScore);
-    }, onError));
-}
+    {
+        StartCoroutine(CompleteTaskCoroutine("1", amount.ToString(), (success, newScore) => {
+            onDone?.Invoke(newScore);
+        }, onError));
+    }
 
     IEnumerator CompleteTaskCoroutine(string taskId, string answer, Action<bool, int> onDone, Action<string> onError)
-{
-    var payload = new TaskCompletePayload
     {
-        // 1. Убедись, что taskId передается как "001" (проверь в инспекторе задания)
-        task_id = taskId, 
+        var payload = new TaskCompletePayload
+        {
+            task_id = taskId, 
+            task_type = "auto", 
+            answer = answer,
+            parent_pin = "1234" 
+        };
         
-        // 2. МЕНЯЕМ НА auto, чтобы сервер дал очки мгновенно!
-        task_type = "auto", 
-        
-        answer = answer,
-        parent_pin = "1234" 
-    };
-    
-    string json = JsonUtility.ToJson(payload);
-    Debug.Log($"[SENDING] {json}");
-
-    yield return ApiClient.Post("/api/task/complete", json, UserSession.Instance.AuthToken,
-        success => {
-            var resp = JsonUtility.FromJson<TaskCompleteResponse>(success);
-
-            OnScoreChanged?.Invoke(resp.score);
-            // Если сервер вернул новый score, значит начисление прошло
-            onDone?.Invoke(true, resp.score);
-        },
-        error => onError?.Invoke(error)
-    );
-}
+        string json = JsonUtility.ToJson(payload);
+        yield return ApiClient.Post("/api/task/complete", json, UserSession.Instance.AuthToken,
+            success => {
+                var resp = JsonUtility.FromJson<TaskCompleteResponse>(success);
+                OnScoreChanged?.Invoke(resp.score);
+                onDone?.Invoke(true, resp.score);
+            },
+            error => onError?.Invoke(error)
+        );
+    }
 }
 
 // --- КЛАССЫ ДАННЫХ ---
@@ -120,14 +155,12 @@ public class DailyCheckinData {
 }
 
 [System.Serializable]
-public class TaskCompletePayload
-{
+public class TaskCompletePayload {
     public string task_id;
-    public string task_type; // Добавляем это поле
+    public string task_type;
     public string answer;
     public string parent_pin;
 }
-
 
 [System.Serializable]
 public class TaskCompleteResponse {
@@ -135,4 +168,15 @@ public class TaskCompleteResponse {
     public int score;
 }
 
+// Новые классы для магазина
+[System.Serializable]
+public class ShopItemInfo {
+    public int id;
+    public string name;
+    public int price;
+}
 
+[System.Serializable]
+public class ShopItemsList {
+    public ShopItemInfo[] items;
+}

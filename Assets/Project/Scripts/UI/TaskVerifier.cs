@@ -51,13 +51,31 @@ public class TaskVerifier : MonoBehaviour
     ShowFeedback(true, "Правильно!");
     submitButton.interactable = false;
 
+    
+
+    // --- НОВОЕ: Визуальное изменение кнопки ---
+    // 1. Делаем кнопку серой через компонент Image
+    Image btnImage = submitButton.GetComponent<Image>();
+    if (btnImage != null) btnImage.color = Color.gray;
+
+    // 2. Убираем тень (Shadow), если она есть
+    Shadow btnShadow = submitButton.GetComponent<Shadow>();
+    if (btnShadow != null) btnShadow.enabled = false;
+
+    // 3. Удаляем или выключаем компонент Button, чтобы она больше не реагировала
+    // Лучше просто выключить, чтобы не ломать логику ссылок
+    submitButton.enabled = false; 
+
     TaskService.Instance.AddPointsSimple(currentTask.rewardPoints, (newScore) => {
         isCompleted = true;
         if (scoreText != null) scoreText.text = $"Очки: {newScore}";
         ShowFeedback(true, $"+{currentTask.rewardPoints} очков!");
     }, (err) => {
         Debug.LogError("Ошибка: " + err);
-        submitButton.interactable = true;
+        submitButton.interactable = false;
+        submitButton.enabled = false;
+        if (btnImage != null) btnImage.color = Color.gray;
+        if (btnShadow != null) btnShadow.enabled = false;
     });
     yield break;
 }
