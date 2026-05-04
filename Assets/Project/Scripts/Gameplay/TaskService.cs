@@ -40,6 +40,24 @@ public class TaskService : MonoBehaviour
     );
 }
 
+    public void SendManualTaskForVerification(string taskId, string solutionText, Action onSuccess, Action<string> onError)
+{
+    var payload = new TaskCompletePayload
+    {
+        task_id = taskId,
+        task_type = "manual", // Указываем, что это ручная проверка
+        answer = solutionText, // Текст ответа ребенка
+        parent_pin = "" // Пин здесь не нужен, родитель проверит в своем кабинете
+    };
+
+    string json = JsonUtility.ToJson(payload);
+
+    StartCoroutine(ApiClient.Post("/api/task/complete", json, UserSession.Instance.AuthToken,
+        success => onSuccess?.Invoke(),
+        onError
+    ));
+}
+
 
 
     // Получение списка товаров (GET /api/shop/items)

@@ -30,21 +30,52 @@ public class TaskVerifier : MonoBehaviour
     }
 
     public void CheckAnswer()
+{
+    if (isCompleted || currentTask == null) return;
+
+    string userAnswer = answerInput.text.Trim();
+    if (string.IsNullOrEmpty(userAnswer)) return;
+
+    // Если задание АВТОМАТИЧЕСКОЕ (как было раньше)
+    if (currentTask.taskType == "auto") 
     {
-        if (isCompleted || currentTask == null) return;
-
-        string userAnswer = answerInput.text.Trim();
-
-        // Сравниваем ответ прямо здесь (без учета регистра)
         if (userAnswer.ToLower() == currentTask.correctAnswer.ToLower())
-        {
             StartCoroutine(AddPointsRoutine());
-        }
         else
-        {
             ShowFeedback(false, "Неверно!");
-        }
     }
+    // Если задание РУЧНОЕ (новое)
+    else if (currentTask.taskType == "manual")
+    {
+        StartCoroutine(SendToParentRoutine(userAnswer));
+    }
+}
+
+    IEnumerator SendToParentRoutine(string solution)
+{
+    ShowFeedback(true, "Отправка на проверку...");
+    submitButton.interactable = false;
+
+    Image btnImage = submitButton.GetComponent<Image>();
+    Shadow btnShadow = submitButton.GetComponent<Shadow>();
+
+    // Используем task_id (или то имя, которое ты дал в TaskData)
+    TaskService.Instance.SendManualTaskForVerification(currentTask.taskId, solution, () => {
+        isCompleted = true;
+        ShowFeedback(true, "Отправлено родителю!");
+        
+        if (btnImage != null) btnImage.color = Color.gray;
+        if (btnShadow != null) btnShadow.enabled = false;
+        submitButton.enabled = false; 
+    }, (err) => {
+        Debug.LogError("Ошибка: " + err);
+        ShowFeedback(false, "Ошибка сети");
+        // Возвращаем кнопку в рабочее состояние, если не улетело
+        submitButton.interactable = true; 
+    });
+
+    yield break;
+}
 
     IEnumerator AddPointsRoutine()
 {
