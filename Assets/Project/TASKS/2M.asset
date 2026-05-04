@@ -16,5 +16,5 @@ MonoBehaviour:
   taskDescription: 5x + 2x + 3x = 20, X = ?
   rewardPoints: 50
   taskIcon: {fileID: 0}
-  taskType: manual
+  taskType: auto
   correctAnswer: 2

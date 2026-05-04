@@ -8,6 +8,10 @@ public class ProfileManager : MonoBehaviour
 
     void Start()
     {
+        if (UserSession.Instance != null && !string.IsNullOrEmpty(UserSession.Instance.Nickname))
+    {
+        UpdateProfileDisplay();
+    }
         Debug.Log("=== ProfileManager Start ===");
         
         if (UserSession.Instance == null)
@@ -19,6 +23,8 @@ public class ProfileManager : MonoBehaviour
         // НЕ пытаемся показать профиль сейчас - он пустой
         // Просто ждём обновления извне
         Debug.Log("ProfileManager готов, ждём обновления после логина");
+
+        
     }
     
     // ЭТОТ МЕТОД БУДЕТ ВЫЗЫВАТЬСЯ ПОСЛЕ ЛОГИНА

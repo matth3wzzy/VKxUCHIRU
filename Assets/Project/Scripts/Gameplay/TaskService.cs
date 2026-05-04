@@ -47,7 +47,7 @@ public class TaskService : MonoBehaviour
         task_id = taskId,
         task_type = "manual", // Указываем, что это ручная проверка
         answer = solutionText, // Текст ответа ребенка
-        parent_pin = "" // Пин здесь не нужен, родитель проверит в своем кабинете
+        parent_pin = "1234" // Пин здесь не нужен, родитель проверит в своем кабинете
     };
 
     string json = JsonUtility.ToJson(payload);
@@ -125,6 +125,27 @@ public class TaskService : MonoBehaviour
             onError
         ));
     }
+
+
+    public void UpdateTaskStatus(int id, string status, Action<string> onSuccess, Action<string> onError)
+{
+    // Путь из таблицы админа: /api/parent/review
+    // Важно: уточни у админа, как именно слать JSON. 
+    // Обычно это {"task_id": id, "action": "approve"} или как ниже:
+    string json = "{\"task_id\":" + id + ", \"status\":\"" + status + "\"}";
+
+    StartCoroutine(ApiClient.Post("/api/parent/review", json, UserSession.Instance.AuthToken,
+        onSuccess, onError));
+}
+
+// Получить список ожидающих заданий
+public void GetPendingTasks(Action<string> onSuccess, Action<string> onError)
+{
+    // Путь из таблицы админа: /api/parent/pending-tasks
+    StartCoroutine(ApiClient.Get("/api/parent/pending-tasks", UserSession.Instance.AuthToken,
+        onSuccess, onError));
+}
+
 
 
     public void AddPointsSimple(int amount, Action<int> onDone, Action<string> onError)

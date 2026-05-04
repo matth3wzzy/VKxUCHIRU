@@ -12,6 +12,8 @@ public class UserSession : MonoBehaviour
     public string UserEmail { get; set; }
     public string Role { get; private set; }
     public bool IsLoggedIn => !string.IsNullOrEmpty(AuthToken);
+    public string parent_pin; // Добавь эту строку там, где лежат Nickname и AuthToken
+
 
     void Awake()
     {
