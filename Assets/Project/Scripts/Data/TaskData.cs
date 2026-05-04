@@ -7,5 +7,6 @@ public class TaskData : ScriptableObject
     public string taskDescription;
     public int rewardPoints = 10;
     public Sprite taskIcon;
-    public string taskType = "manual"; // "auto" ��� "manual"
+    public string taskType = "manual"; // "auto" ��� "manual"
+    public string correctAnswer; // Добавь это в список полей
 }

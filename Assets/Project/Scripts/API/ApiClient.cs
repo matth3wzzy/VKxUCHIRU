@@ -8,7 +8,7 @@ public static class ApiClient
 {
     public static string BaseUrl =
 #if UNITY_EDITOR
-        "https://gamejem-production.up.railway.app";   // ���� Railway-������
+        "https://gamejem-production.up.railway.app";   // ���� Railway-������
 #else
         "";
 #endif
@@ -41,6 +41,8 @@ public static class ApiClient
             if (req.result == UnityWebRequest.Result.Success)
                 onSuccess?.Invoke(req.downloadHandler.text);
             else
+            
+                Debug.LogError("СЕРВЕР ПИШЕТ: " + req.downloadHandler.text); // ЭТО РЕШИТ ВСЁ
                 onError?.Invoke(req.error);
         }
     }

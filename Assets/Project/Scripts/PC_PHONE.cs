@@ -9,6 +9,10 @@ public class CanvasSorter : MonoBehaviour
     public Canvas NEW_reg_PHONE;     // ← добавить (если есть)
     public Canvas studentPagePC;     // ← страница ученика ПК
     public Canvas studentPagePhone;  // ← страница ученика Телефон
+    public Canvas profilePage;
+    public Canvas TaskPage;
+    public Canvas ShopPage;
+    public Canvas AchievePage;
     
     private Canvas currentActiveCanvas;
     private bool isPhoneDevice;
@@ -72,6 +76,42 @@ public class CanvasSorter : MonoBehaviour
         else
             ShowCanvas(NEW_login_PC);
     }
+
+    public void NavAchievePage()
+{
+    Debug.Log("Переход на страницу профиля");
+    
+    HideAllAuthPanels();  // Скрываем логин/регистрацию
+    
+    ShowCanvas(AchievePage);
+}
+
+    public void NavShopPage()
+{
+    Debug.Log("Переход на страницу Task");
+    
+    HideAllAuthPanels();  // Скрываем логин/регистрацию
+    
+    ShowCanvas(ShopPage);
+}
+
+    public void NavTaskPage()
+{
+    Debug.Log("Переход на страницу Task");
+    
+    HideAllAuthPanels();  // Скрываем логин/регистрацию
+    
+    ShowCanvas(TaskPage);
+}
+
+    public void NavProfilePage()
+{
+    Debug.Log("Переход на страницу профиля");
+    
+    HideAllAuthPanels();  // Скрываем логин/регистрацию
+    
+    ShowCanvas(profilePage);
+}
     public void HideAllAuthPanels()
 {
     Debug.Log("Скрываем ВСЕ панели авторизации");
@@ -100,6 +140,11 @@ public class CanvasSorter : MonoBehaviour
         if (NEW_reg_PHONE != null) NEW_reg_PHONE.sortingOrder = order;
         if (studentPagePC != null) studentPagePC.sortingOrder = order;
         if (studentPagePhone != null) studentPagePhone.sortingOrder = order;
+        if (profilePage != null) profilePage.sortingOrder = order;
+        if (TaskPage != null) TaskPage.sortingOrder = order;
+        if (ShopPage != null) ShopPage.sortingOrder = order;
+        if (AchievePage != null) AchievePage.sortingOrder = order;
+
         
         currentActiveCanvas = null;
     }
