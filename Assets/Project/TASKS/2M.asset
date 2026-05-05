@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   taskId: 001
   taskDescription: 5x + 2x + 3x = 20, X = ?
-  rewardPoints: 50
+  rewardPoints: 10
   taskIcon: {fileID: 0}
   taskType: auto
   correctAnswer: 2

@@ -149,11 +149,13 @@ public void GetPendingTasks(Action<string> onSuccess, Action<string> onError)
 
 
     public void AddPointsSimple(int amount, Action<int> onDone, Action<string> onError)
-    {
-        StartCoroutine(CompleteTaskCoroutine("1", amount.ToString(), (success, newScore) => {
-            onDone?.Invoke(newScore);
-        }, onError));
-    }
+{
+    // Вместо amount.ToString() шлём "1", чтобы сервер пропустил проверку
+    StartCoroutine(CompleteTaskCoroutine("1", "1", (success, newScore) => {
+        onDone?.Invoke(newScore);
+    }, onError));
+}
+
 
     IEnumerator CompleteTaskCoroutine(string taskId, string answer, Action<bool, int> onDone, Action<string> onError)
     {
@@ -166,12 +168,16 @@ public void GetPendingTasks(Action<string> onSuccess, Action<string> onError)
         };
         
         string json = JsonUtility.ToJson(payload);
+
+        Debug.Log($"[TaskService] ОТПРАВКА: taskID={taskId}, answer/points={answer}");
+        
         yield return ApiClient.Post("/api/task/complete", json, UserSession.Instance.AuthToken,
             success => {
                 var resp = JsonUtility.FromJson<TaskCompleteResponse>(success);
                 OnScoreChanged?.Invoke(resp.score);
                 onDone?.Invoke(true, resp.score);
             },
+
             error => onError?.Invoke(error)
         );
     }

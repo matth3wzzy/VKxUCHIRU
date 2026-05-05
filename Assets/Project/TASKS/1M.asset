@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8aae8097b216d0b43a9abf8db5b3c995, type: 3}
   m_Name: 1M
   m_EditorClassIdentifier: 
-  taskId: 001
+  taskId: 1
   taskDescription: 4X + 3 = -1, X = ?
-  rewardPoints: 50
+  rewardPoints: 10
   taskIcon: {fileID: 0}
   taskType: auto
   correctAnswer: -1

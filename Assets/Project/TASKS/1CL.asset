@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   taskId: 101
   taskDescription: 
-  rewardPoints: 600
+  rewardPoints: 10
   taskIcon: {fileID: 0}
   taskType: manual
   correctAnswer: 
